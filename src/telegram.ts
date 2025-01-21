@@ -4,7 +4,8 @@ import { sleep } from './utils';
 export const TELEGRAM_COMMANDS = {
 	help: { command: '/help', description: 'Show available commands' },
 	liked: { command: '/liked', description: 'Show liked listings' },
-	all: { command: '/all', description: 'Show all listings' },
+	disliked: { command: '/disliked', description: 'Show disliked listings' },
+	all: { command: '/all', description: 'Show all listings (liked and neutral)' },
 };
 
 export const getCommandsKeyboard = () => ({
@@ -78,16 +79,21 @@ export async function sendTelegramMediaGroup(
 export async function cleanChatHistory(botToken: string, chatId: string, env: Env): Promise<void> {
 	const { results } = await env.DB.prepare('SELECT message_id FROM telegram_messages').all();
 	const messageIds = results.map((row) => row.message_id as number);
-	await fetch(`https://api.telegram.org/bot${botToken}/deleteMessages`, {
+	await deleteMessages(botToken, chatId, messageIds);
+	// Clear the messages table after deletion
+	await env.DB.prepare('DELETE FROM telegram_messages').run();
+}
+
+export async function deleteMessages(botToken: string, chatId: string, messageIds: number[]): Promise<TelegramResponse> {
+	const response = await fetch(`https://api.telegram.org/bot${botToken}/deleteMessages`, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({
 			chat_id: chatId,
-			message_ids: messageIds, // Special value to delete all messages
+			message_ids: messageIds,
 		}),
 	});
-	// Clear the messages table after deletion
-	await env.DB.prepare('DELETE FROM telegram_messages').run();
+	return (await response.json()) as TelegramResponse;
 }
 
 export async function storeMessageId(env: Env, listingId: string, messageId: number): Promise<void> {

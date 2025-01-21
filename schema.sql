@@ -1,7 +1,7 @@
 CREATE TABLE listings (
   listingId TEXT PRIMARY KEY,
   data TEXT NOT NULL,
-  liked BOOLEAN,
+  liked INTEGER, -- NULL for neutral, 1 for liked, 0 for disliked,
   translatedDescription TEXT,
   firstSeenAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   telegram_message_id INTEGER

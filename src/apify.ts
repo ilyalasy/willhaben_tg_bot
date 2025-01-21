@@ -55,7 +55,7 @@ export async function handleApifyWebhook(request: Request, env: Env): Promise<Re
 				const firstSeenAt = listing.updatedAt || listing.publishedAt || listing.snapshotDate || new Date().toISOString();
 				const storedListing: StoredListing = {
 					...listing,
-					liked: false,
+					liked: null,
 					translatedDescription: translatedDescription || undefined,
 					firstSeenAt,
 					messageId: null,

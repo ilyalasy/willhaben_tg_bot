@@ -13,25 +13,55 @@
 import { StoredListing, TelegramMessage, TelegramCallback, Env } from './types';
 import { handleApifyWebhook } from './apify';
 import { sendListingMessage } from './listing';
-import { cleanChatHistory, sendTelegramMessage, TELEGRAM_COMMANDS } from './telegram';
+import { cleanChatHistory, deleteMessages, sendTelegramMessage, TELEGRAM_COMMANDS } from './telegram';
 import { calculateRateLimitDelay, sleep } from './utils';
 import { translateText } from './translate';
 async function handleCallback(callback: TelegramCallback, env: Env): Promise<Response> {
 	const [action, listingId] = callback.data.split('_');
 
 	if (action === 'like' || action === 'dislike') {
-		await env.DB.prepare('UPDATE listings SET liked = ? WHERE listingId = ?')
-			.bind(action === 'like' ? 1 : 0, listingId)
-			.run();
+		// Get current status
+		const result = await env.DB.prepare('SELECT liked FROM listings WHERE listingId = ?').bind(listingId).first();
+
+		const currentStatus = result?.liked;
+		let newStatus: number | null = null;
+
+		// Toggle status
+		if (action === 'like') {
+			newStatus = currentStatus === 1 ? null : 1; // Toggle between liked and neutral
+		} else {
+			newStatus = currentStatus === 0 ? null : 0; // Toggle between disliked and neutral
+		}
+
+		await env.DB.prepare('UPDATE listings SET liked = ? WHERE listingId = ?').bind(newStatus, listingId).run();
+
+		let responseText = '';
+		if (newStatus === 1) {
+			responseText = '❤️ Added to favorites!';
+		} else if (newStatus === 0) {
+			responseText = '👎 Marked as disliked';
+		} else {
+			responseText = '⚪ Reaction removed';
+		}
 
 		await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/answerCallbackQuery`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				callback_query_id: callback.id,
-				text: action === 'like' ? 'Added to favorites!' : 'Removed from favorites',
+				text: responseText,
 			}),
 		});
+
+		// If disliked, delete all messages for this listing
+		if (newStatus === 0) {
+			// Get all message IDs for this listing
+			const { results } = await env.DB.prepare('SELECT message_id FROM telegram_messages WHERE listing_id = ?').bind(listingId).all();
+			const messageIds = results.map((row) => row.message_id as number);
+			await deleteMessages(env.TELEGRAM_BOT_TOKEN, env.TELEGRAM_CHAT_ID, messageIds);
+			// Clear the messages table after deletion
+			await env.DB.prepare('DELETE FROM telegram_messages WHERE listing_id = ?').bind(listingId).run();
+		}
 	}
 
 	return new Response('OK');
@@ -47,38 +77,36 @@ async function handleCommand(message: TelegramMessage, env: Env): Promise<Respon
 	}
 
 	const RATE_LIMIT_DELAY = 1001;
-	if (message.text === '/all') {
+	if (message.text === '/all' || message.text === '/liked' || message.text === '/disliked') {
 		await cleanChatHistory(env.TELEGRAM_BOT_TOKEN, env.TELEGRAM_CHAT_ID, env);
-		const { results } = await env.DB.prepare('SELECT data FROM listings ORDER BY firstSeenAt DESC').all();
+		let condition = 'liked = 1 OR liked IS NULL';
+		if (message.text === '/liked') {
+			condition = 'liked = 1';
+		} else if (message.text === '/disliked') {
+			condition = 'liked = 0';
+		}
 
-		console.log('Results length:', results.length);
+		const { results } = await env.DB.prepare(
+			`SELECT data, translatedDescription, liked, firstSeenAt FROM listings WHERE ${condition} ORDER BY firstSeenAt DESC`
+		).all();
 		if (results.length === 0) {
 			await sendTelegramMessage('No listings found!', env.TELEGRAM_BOT_TOKEN, env.TELEGRAM_CHAT_ID);
 		} else {
-			// const RATE_LIMIT_DELAY = calculateRateLimitDelay(results);
 			for (const row of results) {
-				const listing: StoredListing = JSON.parse(row.data as string);
+				const listing: StoredListing = {
+					...JSON.parse(row.data as string),
+					liked: row.liked,
+					translatedDescription: row.translatedDescription,
+					firstSeenAt: row.firstSeenAt,
+				};
 				await sendListingMessage(listing, env, true);
 				await sleep(RATE_LIMIT_DELAY);
 			}
 		}
+		return new Response('OK');
 	}
 
-	if (message.text === '/liked') {
-		await cleanChatHistory(env.TELEGRAM_BOT_TOKEN, env.TELEGRAM_CHAT_ID, env);
-		const { results } = await env.DB.prepare('SELECT data FROM listings WHERE liked = 1 ORDER BY firstSeenAt DESC').all();
-
-		if (results.length === 0) {
-			await sendTelegramMessage('No liked listings yet!', env.TELEGRAM_BOT_TOKEN, env.TELEGRAM_CHAT_ID);
-		} else {
-			// const RATE_LIMIT_DELAY = calculateRateLimitDelay(results);
-			for (const row of results) {
-				const listing: StoredListing = JSON.parse(row.data as string);
-				await sendListingMessage(listing, env);
-				await sleep(RATE_LIMIT_DELAY);
-			}
-		}
-	}
+	await sendTelegramMessage('No command found! Try /help to see available commands.', env.TELEGRAM_BOT_TOKEN, env.TELEGRAM_CHAT_ID);
 
 	return new Response('OK');
 }

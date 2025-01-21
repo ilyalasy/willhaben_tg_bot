@@ -40,7 +40,7 @@ export interface Listing {
 }
 
 export interface StoredListing extends Listing {
-	liked?: boolean;
+	liked?: number | null;
 	translatedDescription?: string;
 	firstSeenAt: string;
 	messageId: number | null;

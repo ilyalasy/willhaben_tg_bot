@@ -1,7 +1,24 @@
-import { StoredListing, Env } from './types';
+import { StoredListing, Env, TelegramKeyboard } from './types';
 import { findClosestStation } from './subway';
 import { sendTelegramMediaGroup, sendTelegramMessage, storeMessageId } from './telegram';
 import { MAX_IMAGES_PER_LISTING, escapeHtml } from './utils';
+
+function getLikeDislikeKeyboard(listing: StoredListing): TelegramKeyboard {
+	return {
+		inline_keyboard: [
+			[
+				{
+					text: listing.liked === 1 ? '👍 Liked ✓' : '👍 Like',
+					callback_data: `like_${listing.listingId}`,
+				},
+				{
+					text: listing.liked === 0 ? '👎 Disliked ✓' : '👎 Dislike',
+					callback_data: `dislike_${listing.listingId}`,
+				},
+			],
+		],
+	};
+}
 
 // Telegram message formatting helpers
 async function formatListing(listing: StoredListing): Promise<string> {
@@ -34,7 +51,7 @@ async function formatListing(listing: StoredListing): Promise<string> {
 🕒 Last Updated: ${lastUpdated}
 
 <b>Description:</b>
-${safeDescription}${listing.liked ? '\n❤️ Liked' : ''}
+${safeDescription}
 🔗 <a href="${escapeHtml(listing.url)}">View Listing</a>`.trim();
 }
 
@@ -68,14 +85,7 @@ export async function sendListingMessage(listing: StoredListing, env: Env, inclu
 			'🔽 Actions 🔽',
 			env.TELEGRAM_BOT_TOKEN,
 			env.TELEGRAM_CHAT_ID,
-			{
-				inline_keyboard: [
-					[
-						{ text: '👍 Like', callback_data: `like_${listing.listingId}` },
-						{ text: '👎 Dislike', callback_data: `dislike_${listing.listingId}` },
-					],
-				],
-			},
+			getLikeDislikeKeyboard(listing),
 			lastMessageId
 		);
 		console.log('Response:', response);
@@ -83,14 +93,7 @@ export async function sendListingMessage(listing: StoredListing, env: Env, inclu
 		await storeMessageId(env, listing.listingId, messageId);
 	} else {
 		// If no images, just send the message with inline keyboard
-		const response = await sendTelegramMessage(message, env.TELEGRAM_BOT_TOKEN, env.TELEGRAM_CHAT_ID, {
-			inline_keyboard: [
-				[
-					{ text: '👍 Like', callback_data: `like_${listing.listingId}` },
-					{ text: '👎 Dislike', callback_data: `dislike_${listing.listingId}` },
-				],
-			],
-		});
+		const response = await sendTelegramMessage(message, env.TELEGRAM_BOT_TOKEN, env.TELEGRAM_CHAT_ID, getLikeDislikeKeyboard(listing));
 		const messageId = response.result.message_id;
 		// Store message ID in database
 		await storeMessageId(env, listing.listingId, messageId);
