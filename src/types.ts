@@ -43,7 +43,7 @@ export interface StoredListing extends Listing {
 	liked?: number | null;
 	translatedDescription?: string;
 	firstSeenAt: string;
-	messageId: number | null;
+	messageIds?: string | null; // Comma-separated list of message IDs
 }
 
 // Telegram types

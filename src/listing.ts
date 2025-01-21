@@ -1,6 +1,6 @@
 import { StoredListing, Env, TelegramKeyboard } from './types';
 import { findClosestStation } from './subway';
-import { sendTelegramMediaGroup, sendTelegramMessage, storeMessageId } from './telegram';
+import { sendTelegramMediaGroup, sendTelegramMessage, storeMessageId, storeMessageIds } from './telegram';
 import { MAX_IMAGES_PER_LISTING, escapeHtml } from './utils';
 
 function getLikeDislikeKeyboard(listing: StoredListing): TelegramKeyboard {
@@ -71,9 +71,11 @@ export async function sendListingMessage(listing: StoredListing, env: Env, inclu
 		const mediaResponse = await sendTelegramMediaGroup(mediaGroup, env.TELEGRAM_BOT_TOKEN, env.TELEGRAM_CHAT_ID);
 		mediaResult = mediaResponse as { result: Array<{ message_id: number }> };
 
-		for (const message of mediaResult.result) {
-			await storeMessageId(env, listing.listingId, message.message_id);
-		}
+		await storeMessageIds(
+			env,
+			listing.listingId,
+			mediaResult.result.map((message) => message.message_id)
+		);
 	}
 
 	if (mediaResult.result.length > 0 && includeButtons) {

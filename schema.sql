@@ -4,13 +4,13 @@ CREATE TABLE listings (
   liked INTEGER, -- NULL for neutral, 1 for liked, 0 for disliked,
   translatedDescription TEXT,
   firstSeenAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  telegram_message_id INTEGER
+  messageIds TEXT
 );
 
-CREATE TABLE telegram_messages (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  listing_id TEXT NOT NULL,
-  message_id INTEGER NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (listing_id) REFERENCES listings(listingId)
-);
+-- CREATE TABLE telegram_messages (
+--   id INTEGER PRIMARY KEY AUTOINCREMENT,
+--   listing_id TEXT NOT NULL,
+--   message_id INTEGER NOT NULL,
+--   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--   FOREIGN KEY (listing_id) REFERENCES listings(listingId)
+-- );

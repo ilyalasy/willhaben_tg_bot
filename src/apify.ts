@@ -58,7 +58,7 @@ export async function handleApifyWebhook(request: Request, env: Env): Promise<Re
 					liked: null,
 					translatedDescription: translatedDescription || undefined,
 					firstSeenAt,
-					messageId: null,
+					messageIds: null,
 				};
 
 				await sendListingMessage(storedListing, env);

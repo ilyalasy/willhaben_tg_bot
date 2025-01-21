@@ -55,12 +55,18 @@ async function handleCallback(callback: TelegramCallback, env: Env): Promise<Res
 
 		// If disliked, delete all messages for this listing
 		if (newStatus === 0) {
-			// Get all message IDs for this listing
-			const { results } = await env.DB.prepare('SELECT message_id FROM telegram_messages WHERE listing_id = ?').bind(listingId).all();
-			const messageIds = results.map((row) => row.message_id as number);
-			await deleteMessages(env.TELEGRAM_BOT_TOKEN, env.TELEGRAM_CHAT_ID, messageIds);
-			// Clear the messages table after deletion
-			await env.DB.prepare('DELETE FROM telegram_messages WHERE listing_id = ?').bind(listingId).run();
+			// Get message IDs from listing
+			const result = await env.DB.prepare('SELECT messageIds FROM listings WHERE listingId = ?').bind(listingId).first();
+
+			if (result?.messageIds) {
+				const messageIds = (result.messageIds as string).split(',').map(Number);
+				if (messageIds.length > 0) {
+					await deleteMessages(env.TELEGRAM_BOT_TOKEN, env.TELEGRAM_CHAT_ID, messageIds);
+				}
+
+				// Clear messageIds after deletion
+				await env.DB.prepare('UPDATE listings SET messageIds = NULL WHERE listingId = ?').bind(listingId).run();
+			}
 		}
 	}
 
@@ -69,6 +75,7 @@ async function handleCallback(callback: TelegramCallback, env: Env): Promise<Res
 
 async function handleCommand(message: TelegramMessage, env: Env): Promise<Response> {
 	if (message.text === '/help' || message.text === '/start') {
+		await cleanChatHistory(env.TELEGRAM_BOT_TOKEN, env.TELEGRAM_CHAT_ID, env);
 		const helpText = Object.values(TELEGRAM_COMMANDS)
 			.map((cmd) => `${cmd.command} - ${cmd.description}`)
 			.join('\n');

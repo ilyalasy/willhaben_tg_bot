@@ -77,25 +77,51 @@ export async function sendTelegramMediaGroup(
 }
 
 export async function cleanChatHistory(botToken: string, chatId: string, env: Env): Promise<void> {
-	const { results } = await env.DB.prepare('SELECT message_id FROM telegram_messages').all();
-	const messageIds = results.map((row) => row.message_id as number);
-	await deleteMessages(botToken, chatId, messageIds);
+	const { results } = await env.DB.prepare('SELECT messageIds FROM listings WHERE messageIds IS NOT NULL').all();
+	const messageIds = results.flatMap((row) => (row.messageIds as string).split(',').map(Number));
+
+	if (messageIds.length > 0) {
+		await deleteMessages(botToken, chatId, messageIds);
+	}
 	// Clear the messages table after deletion
-	await env.DB.prepare('DELETE FROM telegram_messages').run();
+	await env.DB.prepare('UPDATE listings SET messageIds = NULL').run();
 }
 
 export async function deleteMessages(botToken: string, chatId: string, messageIds: number[]): Promise<TelegramResponse> {
-	const response = await fetch(`https://api.telegram.org/bot${botToken}/deleteMessages`, {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({
-			chat_id: chatId,
-			message_ids: messageIds,
-		}),
-	});
-	return (await response.json()) as TelegramResponse;
+	const BATCH_SIZE = 100;
+	let lastResponse: TelegramResponse = { ok: true, result: { message_id: 0 } };
+
+	// Split messageIds into batches of 100
+	for (let i = 0; i < messageIds.length; i += BATCH_SIZE) {
+		const batch = messageIds.slice(i, i + BATCH_SIZE);
+		const response = await fetch(`https://api.telegram.org/bot${botToken}/deleteMessages`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				chat_id: chatId,
+				message_ids: batch,
+			}),
+		});
+		lastResponse = (await response.json()) as TelegramResponse;
+	}
+
+	return lastResponse;
 }
 
 export async function storeMessageId(env: Env, listingId: string, messageId: number): Promise<void> {
-	await env.DB.prepare('INSERT INTO telegram_messages (listing_id, message_id) VALUES (?, ?)').bind(listingId, messageId).run();
+	const result = await env.DB.prepare('SELECT messageIds FROM listings WHERE listingId = ?').bind(listingId).first();
+
+	const existingIds = result?.messageIds ? (result.messageIds as string).split(',') : [];
+	const newIds = [...existingIds, messageId.toString()];
+
+	await env.DB.prepare('UPDATE listings SET messageIds = ? WHERE listingId = ?').bind(newIds.join(','), listingId).run();
+}
+
+export async function storeMessageIds(env: Env, listingId: string, messageIds: number[]): Promise<void> {
+	const result = await env.DB.prepare('SELECT messageIds FROM listings WHERE listingId = ?').bind(listingId).first();
+
+	const existingIds = result?.messageIds ? (result.messageIds as string).split(',') : [];
+	const newIds = [...existingIds, ...messageIds.map(String)];
+
+	await env.DB.prepare('UPDATE listings SET messageIds = ? WHERE listingId = ?').bind(newIds.join(','), listingId).run();
 }
