@@ -1,0 +1,20 @@
+name = "willhaben-bot"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "<YOUR_DATABASE_NAME>"
+database_id = "<YOUR_DATABASE_ID>"
+
+[vars]
+# For local development
+TELEGRAM_BOT_TOKEN = "<YOUR_TELEGRAM_BOT_TOKEN>"
+TELEGRAM_CHAT_ID = "<YOUR_TELEGRAM_CHAT_ID>"
+DEEPL_API_KEY = "<YOUR_DEEPL_API_KEY>"
+APIFY_WEBHOOK_SECRET = "<YOUR_APIFY_WEBHOOK_SECRET>"
+TG_WEBHOOK_SECRET = "<YOUR_TG_WEBHOOK_SECRET>"
+
+[observability.logs]
+enabled = true
+

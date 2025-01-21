@@ -1,0 +1,16 @@
+CREATE TABLE listings (
+  listingId TEXT PRIMARY KEY,
+  data TEXT NOT NULL,
+  liked BOOLEAN,
+  translatedDescription TEXT,
+  firstSeenAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  telegram_message_id INTEGER
+);
+
+CREATE TABLE telegram_messages (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  listing_id TEXT NOT NULL,
+  message_id INTEGER NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (listing_id) REFERENCES listings(listingId)
+);
