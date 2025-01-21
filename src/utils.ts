@@ -14,3 +14,34 @@ export const calculateRateLimitDelay = (results: any[]): number => {
 	// Calculate delay needed to stay under 30 messages per second
 	return Math.max(((1000 / 30) * totalMessages) / results.length, 50); // minimum 50ms delay
 };
+
+export function escapeMarkdown(text: string): string {
+	const replacements: [RegExp, string, string][] = [
+		[/\*/g, '\\*', 'asterisks'],
+		[/#/g, '\\#', 'number signs'],
+		[/\//g, '\\/', 'slashes'],
+		[/\(/g, '\\(', 'parentheses'],
+		[/\)/g, '\\)', 'parentheses'],
+		[/\[/g, '\\[', 'square brackets'],
+		[/\]/g, '\\]', 'square brackets'],
+		[/<|&lt;/g, '&lt;', 'angle brackets'],
+		[/>|&gt;/g, '&gt;', 'angle brackets'],
+		[/_/g, '\\_', 'underscores'],
+		[/`/g, '\\`', 'codeblocks'],
+		[/\./g, '\\.', 'periods'], // Added this line
+	];
+
+	return replacements.reduce((text, [pattern, replacement]) => text.replace(pattern, replacement), text);
+}
+
+export function escapeHtml(text: string): string {
+	const htmlEntities: Record<string, string> = {
+		'&': '&amp;',
+		'<': '&lt;',
+		'>': '&gt;',
+		'"': '&quot;',
+		"'": '&#39;',
+	};
+
+	return text.replace(/[&<>"']/g, (char) => htmlEntities[char] || char);
+}

@@ -117,7 +117,7 @@ async function handleTelegramWebhook(request: Request, env: Env): Promise<Respon
 	} catch (error) {
 		console.error('Error in handleTelegramWebhook:', error);
 		await sendTelegramMessage('Something went wrong. Please debug more!', env.TELEGRAM_BOT_TOKEN, env.TELEGRAM_CHAT_ID);
-		return new Response('NOT OK');
+		return new Response('OK');
 	}
 }
 

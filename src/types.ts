@@ -86,6 +86,7 @@ export interface TelegramMedia {
 	type: string;
 	media: string;
 	caption?: string;
+	parse_mode?: string;
 }
 
 // Subway types

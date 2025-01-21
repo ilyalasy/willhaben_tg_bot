@@ -32,7 +32,7 @@ export async function sendTelegramMessage(
 			text: text,
 			reply_parameters: reply_parameters,
 			reply_markup: inline_markup || getCommandsKeyboard(),
-			parse_mode: 'Markdown',
+			parse_mode: 'HTML',
 		}),
 	});
 
@@ -46,7 +46,7 @@ export async function sendTelegramMessage(
 		}
 
 		const error = await response.json();
-		throw new Error(`Telegram API error: ${response.status} ${response.statusText} - ${JSON.stringify(error)}`);
+		throw new Error(`Telegram API error: ${response.status} ${response.statusText} - Input: ${text} - ${JSON.stringify(error)}`);
 	}
 
 	return (await response.json()) as TelegramResponse;

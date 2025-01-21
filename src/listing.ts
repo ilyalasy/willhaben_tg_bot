@@ -1,12 +1,17 @@
 import { StoredListing, Env } from './types';
 import { findClosestStation } from './subway';
 import { sendTelegramMediaGroup, sendTelegramMessage, storeMessageId } from './telegram';
-import { MAX_IMAGES_PER_LISTING } from './utils';
+import { MAX_IMAGES_PER_LISTING, escapeHtml } from './utils';
 
 // Telegram message formatting helpers
 async function formatListing(listing: StoredListing): Promise<string> {
 	const price = listing.monetaryDetails.rent || listing.monetaryDetails.purchasingPrice;
 	const priceType = listing.monetaryDetails.rent ? 'Rent' : 'Price';
+
+	// Escape special characters in title and description
+	const safeTitle = escapeHtml(listing.title);
+	const safeDescription = escapeHtml(listing.translatedDescription || listing.description);
+	const safeAddress = escapeHtml(`${listing.address.street}, ${listing.address.postalCode} ${listing.address.city}`);
 
 	// Find closest subway station
 	const closestStation = findClosestStation(listing.coordinates.latitude, listing.coordinates.longitude);
@@ -19,18 +24,18 @@ async function formatListing(listing: StoredListing): Promise<string> {
 
 	// Format last updated date
 	const listingDate = listing.firstSeenAt || listing.updatedAt || listing.publishedAt || listing.snapshotDate;
-	const lastUpdated = listingDate ? new Date(listingDate).toLocaleString() : 'N/A';
+	const lastUpdated = listingDate ? new Date(listingDate).toLocaleDateString('en-GB') : 'N/A';
 
-	return `🏠 *${listing.title}*
+	return `🏠 <b>${safeTitle}</b>
 💰 ${priceType}: ${price}€
 📐 Size: ${listing.features.livingArea}m²
-📍 ${listing.address.street}, ${listing.address.postalCode} ${listing.address.city}${stationInfo}
-📍 [View on Maps](${mapsUrl})
+📍 ${safeAddress}${stationInfo}
+📍 <a href="${mapsUrl}">View on Maps</a>
 🕒 Last Updated: ${lastUpdated}
-  
-*Description:*
-${listing.translatedDescription || listing.description}${listing.liked ? '\n❤️ Liked' : ''}
-🔗 [View Listing](${listing.url})`.trim();
+
+<b>Description:</b>
+${safeDescription}${listing.liked ? '\n❤️ Liked' : ''}
+🔗 <a href="${escapeHtml(listing.url)}">View Listing</a>`.trim();
 }
 
 export async function sendListingMessage(listing: StoredListing, env: Env, includeButtons: boolean = true): Promise<void> {
@@ -43,7 +48,7 @@ export async function sendListingMessage(listing: StoredListing, env: Env, inclu
 			type: 'photo',
 			media: url,
 			caption: index === 0 ? message : '',
-			parse_mode: index === 0 ? 'Markdown' : undefined,
+			parse_mode: 'HTML',
 		}));
 
 		const mediaResponse = await sendTelegramMediaGroup(mediaGroup, env.TELEGRAM_BOT_TOKEN, env.TELEGRAM_CHAT_ID);
