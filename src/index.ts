@@ -94,7 +94,7 @@ async function handleCommand(message: TelegramMessage, env: Env): Promise<Respon
 		}
 
 		const { results } = await env.DB.prepare(
-			`SELECT data, translatedDescription, liked, firstSeenAt FROM listings WHERE ${condition} ORDER BY firstSeenAt DESC`
+			`SELECT data, translatedDescription, liked, firstSeenAt, isNew FROM listings WHERE ${condition} ORDER BY firstSeenAt DESC`
 		).all();
 		if (results.length === 0) {
 			await sendTelegramMessage('No listings found!', env.TELEGRAM_BOT_TOKEN, env.TELEGRAM_CHAT_ID);
@@ -105,6 +105,7 @@ async function handleCommand(message: TelegramMessage, env: Env): Promise<Respon
 					liked: row.liked,
 					translatedDescription: row.translatedDescription,
 					firstSeenAt: row.firstSeenAt,
+					isNew: row.isNew,
 				};
 				await sendListingMessage(listing, env, true);
 				await sleep(RATE_LIMIT_DELAY);

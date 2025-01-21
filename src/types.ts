@@ -44,6 +44,7 @@ export interface StoredListing extends Listing {
 	translatedDescription?: string;
 	firstSeenAt: string;
 	messageIds?: string | null; // Comma-separated list of message IDs
+	isNew?: boolean;
 }
 
 // Telegram types

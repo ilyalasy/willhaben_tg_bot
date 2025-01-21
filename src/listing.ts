@@ -43,7 +43,9 @@ async function formatListing(listing: StoredListing): Promise<string> {
 	const listingDate = listing.firstSeenAt || listing.updatedAt || listing.publishedAt || listing.snapshotDate;
 	const lastUpdated = listingDate ? new Date(listingDate).toLocaleDateString('en-GB') : 'N/A';
 
-	return `🏠 <b>${safeTitle}</b>
+	const newBadge = listing.isNew ? '🆕<b>NEW!</b>\n' : '';
+
+	return `${newBadge}🏠<b>${safeTitle}</b>
 💰 ${priceType}: ${price}€
 📐 Size: ${listing.features.livingArea}m²
 📍 ${safeAddress}${stationInfo}

@@ -47,8 +47,8 @@ export async function handleApifyWebhook(request: Request, env: Env): Promise<Re
 				// }
 
 				// Store in database
-				await env.DB.prepare('INSERT INTO listings (listingId, data, translatedDescription, liked) VALUES (?, ?, ?, 0)')
-					.bind(listing.listingId, JSON.stringify(listing), translatedDescription)
+				await env.DB.prepare('INSERT INTO listings (listingId, data, translatedDescription, liked, isNew) VALUES (?, ?, ?, ?, ?)')
+					.bind(listing.listingId, JSON.stringify(listing), translatedDescription, null, true)
 					.run();
 
 				// Send message
@@ -59,6 +59,7 @@ export async function handleApifyWebhook(request: Request, env: Env): Promise<Re
 					translatedDescription: translatedDescription || undefined,
 					firstSeenAt,
 					messageIds: null,
+					isNew: true,
 				};
 
 				await sendListingMessage(storedListing, env);
@@ -70,8 +71,8 @@ export async function handleApifyWebhook(request: Request, env: Env): Promise<Re
 				const listingDate = listing.updatedAt || listing.publishedAt || listing.snapshotDate;
 				if (listingDate && (!existingData.firstSeenAt || new Date(listingDate) < new Date(existingData.firstSeenAt))) {
 					existingData.firstSeenAt = listingDate;
-					await env.DB.prepare('UPDATE listings SET data = ? WHERE listingId = ?')
-						.bind(JSON.stringify(existingData), listing.listingId)
+					await env.DB.prepare('UPDATE listings SET data = ?, isNew = ? WHERE listingId = ?')
+						.bind(JSON.stringify(existingData), false, listing.listingId)
 						.run();
 				}
 			}

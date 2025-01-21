@@ -4,7 +4,8 @@ CREATE TABLE listings (
   liked INTEGER, -- NULL for neutral, 1 for liked, 0 for disliked,
   translatedDescription TEXT,
   firstSeenAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  messageIds TEXT
+  messageIds TEXT,
+  isNew BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 -- CREATE TABLE telegram_messages (
