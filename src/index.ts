@@ -75,7 +75,9 @@ async function handleCallback(callback: TelegramCallback, env: Env): Promise<Res
 
 async function handleCommand(message: TelegramMessage, env: Env): Promise<Response> {
 	if (message.text === '/help' || message.text === '/start') {
-		await cleanChatHistory(env.TELEGRAM_BOT_TOKEN, env.TELEGRAM_CHAT_ID, env);
+		if (message.text === '/start') {
+			await cleanChatHistory(env.TELEGRAM_BOT_TOKEN, env.TELEGRAM_CHAT_ID, env);
+		}
 		const helpText = Object.values(TELEGRAM_COMMANDS)
 			.map((cmd) => `${cmd.command} - ${cmd.description}`)
 			.join('\n');
@@ -94,7 +96,7 @@ async function handleCommand(message: TelegramMessage, env: Env): Promise<Respon
 		}
 
 		const { results } = await env.DB.prepare(
-			`SELECT data, translatedDescription, liked, firstSeenAt, isNew FROM listings WHERE ${condition} ORDER BY firstSeenAt DESC`
+			`SELECT data, translatedDescription, liked, firstSeenAt, isNew FROM listings WHERE ${condition} ORDER BY firstSeenAt ASC`
 		).all();
 		if (results.length === 0) {
 			await sendTelegramMessage('No listings found!', env.TELEGRAM_BOT_TOKEN, env.TELEGRAM_CHAT_ID);

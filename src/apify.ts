@@ -37,7 +37,7 @@ export async function handleApifyWebhook(request: Request, env: Env): Promise<Re
 
 			if (!existing) {
 				// Translate description
-				let translatedDescription;
+				let translatedDescription = null;
 				// CLOUDFLARE doesn't allow to call DEEPL API (525) :(
 				// try {
 				// 	translatedDescription = await translateText(listing.description, env.DEEPL_API_KEY);
@@ -45,19 +45,21 @@ export async function handleApifyWebhook(request: Request, env: Env): Promise<Re
 				// 	console.error('Translation failed:', error);
 				// 	translatedDescription = null;
 				// }
+				const firstSeenAt = listing.updatedAt || listing.publishedAt || listing.snapshotDate || new Date().toISOString();
 
 				// Store in database
-				await env.DB.prepare('INSERT INTO listings (listingId, data, translatedDescription, liked, isNew) VALUES (?, ?, ?, ?, ?)')
-					.bind(listing.listingId, JSON.stringify(listing), translatedDescription, null, true)
+				await env.DB.prepare(
+					'INSERT INTO listings (listingId, data, translatedDescription, liked, isNew, firstSeenAt) VALUES (?, ?, ?, ?, ?, ?)'
+				)
+					.bind(listing.listingId, JSON.stringify(listing), translatedDescription, null, true, firstSeenAt)
 					.run();
 
 				// Send message
-				const firstSeenAt = listing.updatedAt || listing.publishedAt || listing.snapshotDate || new Date().toISOString();
 				const storedListing: StoredListing = {
 					...listing,
 					liked: null,
 					translatedDescription: translatedDescription || undefined,
-					firstSeenAt,
+					firstSeenAt: firstSeenAt,
 					messageIds: null,
 					isNew: true,
 				};
@@ -66,15 +68,11 @@ export async function handleApifyWebhook(request: Request, env: Env): Promise<Re
 				await sleep(1100);
 				results.success++;
 			} else {
+				const firstSeenAt = listing.updatedAt || listing.publishedAt || listing.snapshotDate || new Date().toISOString();
 				// Update firstSeenAt if listing exists
-				const existingData = JSON.parse(existing.data as string) as StoredListing;
-				const listingDate = listing.updatedAt || listing.publishedAt || listing.snapshotDate;
-				if (listingDate && (!existingData.firstSeenAt || new Date(listingDate) < new Date(existingData.firstSeenAt))) {
-					existingData.firstSeenAt = listingDate;
-					await env.DB.prepare('UPDATE listings SET data = ?, isNew = ? WHERE listingId = ?')
-						.bind(JSON.stringify(existingData), false, listing.listingId)
-						.run();
-				}
+				await env.DB.prepare('UPDATE listings SET data = ?, isNew = ?, firstSeenAt = ? WHERE listingId = ?')
+					.bind(JSON.stringify(listing), false, firstSeenAt, listing.listingId)
+					.run();
 			}
 		} catch (error) {
 			results.failed++;
