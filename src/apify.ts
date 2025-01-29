@@ -30,6 +30,7 @@ export async function handleApifyWebhook(request: Request, env: Env): Promise<Re
 		errors: [],
 	};
 
+	let showListings: StoredListing[] = [];
 	for (const listing of listings) {
 		try {
 			// Check if listing already exists
@@ -63,10 +64,7 @@ export async function handleApifyWebhook(request: Request, env: Env): Promise<Re
 					messageIds: null,
 					isNew: true,
 				};
-
-				await sendListingMessage(storedListing, env);
-				await sleep(1100);
-				results.success++;
+				showListings.push(storedListing);
 			} else {
 				const firstSeenAt = listing.updatedAt || listing.publishedAt || listing.snapshotDate || new Date().toISOString();
 				// Update firstSeenAt if listing exists
@@ -80,6 +78,17 @@ export async function handleApifyWebhook(request: Request, env: Env): Promise<Re
 				listingId: listing.listingId,
 				error: error instanceof Error ? error.message : 'Unknown error',
 			});
+		}
+	}
+
+	// Sort listings by firstSeenAt before sending
+	if (showListings.length > 0) {
+		const sortedListings = [...showListings].sort((a, b) => new Date(a.firstSeenAt).getTime() - new Date(b.firstSeenAt).getTime());
+
+		for (const listing of sortedListings) {
+			await sendListingMessage(listing, env);
+			await sleep(1100);
+			results.success++;
 		}
 	}
 
