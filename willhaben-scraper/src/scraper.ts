@@ -115,11 +115,15 @@ async function processListingPage(url: string, browser: Browser): Promise<CondoI
 				.join('\n')
 				.toLowerCase()
 		);
+
+		const description =
+			`${await extractText('[data-testid="ad-description-Objektbeschreibung"]')}\n` +
+			`${await extractText('[data-testid="ad-description-Ausstattung"]')}`;
 		return {
 			listingId: listingId,
 			url,
 			title: (await extractText('h1')) || '',
-			description: (await extractText('[data-testid="ad-description-Objektbeschreibung"]')) || '',
+			description: description || '',
 			propertyType: 'apartment', // Default to apartment, can be enhanced
 			address: {
 				street: street || '',
