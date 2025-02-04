@@ -13,7 +13,7 @@ The project consists of two Cloudflare Workers:
 
 ### willhaben-scraper
 - Runs on a daily schedule to scrape Willhaben listings
-- Uses Puppeteer for web scraping
+- Uses Puppeteer for web scraping (**Note**: requires [Browser Rendering](https://developers.cloudflare.com/browser-rendering/) access)
 - Filters listings based on configurable criteria
 - Sends filtered listings to willhaben-bot
 
