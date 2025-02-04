@@ -28,12 +28,12 @@ The project consists of two Cloudflare Workers:
 1. Clone the repository
 2. Install dependencies for both workers:
 
-3. Copy `wrangler.toml.example` to `wrangler.toml` in both directories and configure:
-
 ```bash
 cd willhaben-bot && npm install
 cd ../willhaben-scraper && npm install
 ```
+
+3. Copy `wrangler.toml.example` to `wrangler.toml` in both directories and configure:
 
 ### willhaben-bot
 - `TELEGRAM_BOT_TOKEN`: Your Telegram bot token
