@@ -13,28 +13,27 @@ export interface Listing {
 		country: string;
 		countryCode: string;
 	};
-	coordinates: {
-		latitude: number;
-		longitude: number;
-	};
+	coordinates: { latitude: number; longitude: number };
 	monetaryDetails: {
 		purchasingPrice: number | null;
+		previousPurchasingPrice: number | null;
+		purchasingPricePerM2: number | null;
 		rent: number | null;
+		previousRent: number | null;
+		rentPerM2: number | null;
 		currencyCode: string;
 		isCommissionFree: boolean;
 	};
 	features: {
 		livingArea: number;
-		hasGarage: boolean;
-		hasBalcony: boolean;
-		hasTerrace: boolean;
-		hasGarden: boolean;
-		hasLoggia: boolean;
+		bedrooms: number | null;
 		hasElevator: boolean;
-		[key: string]: any;
+		hasLoggia: boolean;
+		hasBuiltInKitchen: boolean;
 	};
 	images: string[];
 	snapshotDate: string;
+	scrapedFrom: string;
 	publishedAt: string | null;
 	updatedAt: string | null;
 }

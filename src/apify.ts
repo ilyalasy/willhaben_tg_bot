@@ -14,16 +14,16 @@ async function fetchDatasetItems(datasetId: string): Promise<Listing[]> {
 }
 
 export async function handleApifyWebhook(request: Request, env: Env): Promise<Response> {
-	const data = (await request.json()) as { resource?: { defaultDatasetId?: string } };
+	const listings = (await request.json()) as Listing[];
 
-	if (!data.resource?.defaultDatasetId) {
-		return new Response(JSON.stringify({ error: 'Invalid webhook payload' }), {
-			status: 400,
-			headers: { 'Content-Type': 'application/json' },
-		});
-	}
+	// if (!data.resource?.defaultDatasetId) {
+	// 	return new Response(JSON.stringify({ error: 'Invalid webhook payload' }), {
+	// 		status: 400,
+	// 		headers: { 'Content-Type': 'application/json' },
+	// 	});
+	// }
 
-	const listings = await fetchDatasetItems(data.resource.defaultDatasetId);
+	// const listings = await fetchDatasetItems(data.resource.defaultDatasetId);
 	const results: ProcessingResults = {
 		success: 0,
 		failed: 0,

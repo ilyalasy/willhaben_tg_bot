@@ -66,7 +66,7 @@ export async function sendListingMessage(listing: StoredListing, env: Env, inclu
 		const mediaGroup = listing.images.slice(0, MAX_IMAGES_PER_LISTING).map((url, index) => ({
 			type: 'photo',
 			media: url,
-			caption: index === 0 ? message : '',
+			caption: index === 0 ? message.slice(0, 1024) : '',
 			parse_mode: 'HTML',
 		}));
 
