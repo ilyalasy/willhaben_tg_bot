@@ -173,3 +173,9 @@ dist
 
 wrangler.toml
 set_webhook.sh
+
+.DS_Store
+
+data/
+overpass/
+scraper/
