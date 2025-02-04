@@ -61,11 +61,11 @@ cd ../willhaben-scraper && npx wrangler deploy
 ## Development
 
 ### willhaben-bot
-- `npx wrangler dev`: Start development server
+- `npx wrangler dev --remote`: Start development server
 - `npx wrangler deploy`: Deploy to Cloudflare Workers
 
 ### willhaben-scraper
-- `npx wrangler dev`: Start development server
+- `npx wrangler dev --remote`: Start development server
 - `npx wrangler deploy`: Deploy to Cloudflare Workers
 
 ## Telegram Commands
