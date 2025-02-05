@@ -7,7 +7,7 @@ export async function crawlWillhaben(env: Env) {
 	const browser = await puppeteer.launch(env.MYBROWSER);
 	const page = await browser.newPage();
 
-	const lastNumDays = 5;
+	const lastNumDays = 2;
 	let currentUrl =
 		env.DEFAULT_URL +
 		`?PRICE_FROM=${defaultFilterSettings.rentRange.min}&` +
