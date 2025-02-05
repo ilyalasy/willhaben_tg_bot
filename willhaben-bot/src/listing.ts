@@ -27,7 +27,7 @@ async function formatListing(listing: StoredListing): Promise<string> {
 
 	// Escape special characters in title and description
 	const safeTitle = escapeHtml(listing.title);
-	const safeDescription = escapeHtml(listing.translatedDescription || listing.description);
+	const safeDescription = escapeHtml(listing.translatedDescription || listing.description).slice(0, 600) + '...';
 	const safeAddress = escapeHtml(`${listing.address.street}, ${listing.address.postalCode} ${listing.address.city}`);
 
 	// Find closest subway station
@@ -66,7 +66,7 @@ export async function sendListingMessage(listing: StoredListing, env: Env, inclu
 		const mediaGroup = listing.images.slice(0, MAX_IMAGES_PER_LISTING).map((url, index) => ({
 			type: 'photo',
 			media: url,
-			caption: index === 0 ? message.slice(0, 1024) : '',
+			caption: index === 0 ? message : '',
 			parse_mode: 'HTML',
 		}));
 
