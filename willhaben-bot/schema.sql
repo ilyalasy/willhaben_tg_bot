@@ -3,7 +3,7 @@ CREATE TABLE listings (
   data TEXT NOT NULL,
   liked INTEGER, -- NULL for neutral, 1 for liked, 0 for disliked,
   translatedDescription TEXT,
-  firstSeenAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  firstSeenAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   messageIds TEXT,
   isNew BOOLEAN NOT NULL DEFAULT FALSE
 );

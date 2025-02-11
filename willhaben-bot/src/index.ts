@@ -86,13 +86,15 @@ async function handleCommand(message: TelegramMessage, env: Env): Promise<Respon
 	}
 
 	const RATE_LIMIT_DELAY = 1001;
-	if (message.text === '/all' || message.text === '/liked' || message.text === '/disliked') {
+	if (message.text === '/all' || message.text === '/liked' || message.text === '/disliked' || message.text === '/latest') {
 		await cleanChatHistory(env.TELEGRAM_BOT_TOKEN, env.TELEGRAM_CHAT_ID, env);
 		let condition = 'liked = 1 OR liked IS NULL';
 		if (message.text === '/liked') {
 			condition = 'liked = 1';
 		} else if (message.text === '/disliked') {
 			condition = 'liked = 0';
+		} else if (message.text === '/latest') {
+			condition = "firstSeenAt >= datetime('now', '-2 days')";
 		}
 
 		const { results } = await env.DB.prepare(

@@ -5,6 +5,7 @@ export const TELEGRAM_COMMANDS = {
 	help: { command: '/help', description: 'Show available commands' },
 	liked: { command: '/liked', description: 'Show liked listings' },
 	disliked: { command: '/disliked', description: 'Show disliked listings' },
+	latest: { command: '/latest', description: 'Show listings from the last 2 days' },
 	all: { command: '/all', description: 'Show all listings (liked and neutral)' },
 };
 

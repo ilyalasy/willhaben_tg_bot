@@ -100,8 +100,9 @@ async function processListingPage(url: string, browser: Browser): Promise<CondoI
 
 		// Extract edit date if available
 		const editDateText = await extractText('[data-testid="ad-detail-ad-edit-date-top"]');
-		const editDateMatch = editDateText?.match(/(\d{2}\.\d{2}\.\d{4})/);
-		const editDate = editDateMatch ? editDateMatch[1] : undefined;
+		const editDateMatch = editDateText?.match(/(\d{2}\.\d{2}\.\d{4}),?\s*(\d{2}:\d{2})/);
+		const editDate = editDateMatch ? new Date(`${editDateMatch[1].split('.').reverse().join('-')}T${editDateMatch[2]}`) : new Date();
+		const editDateIso = editDate.toISOString();
 
 		const rent = parseFloat(jsonData['offers']['price']) || (await extractNumber('[data-testid="contact-box-price-box-price-value-0"]'));
 		const livingArea =
@@ -159,7 +160,7 @@ async function processListingPage(url: string, browser: Browser): Promise<CondoI
 			snapshotDate: new Date().toISOString(),
 			scrapedFrom: url,
 			publishedAt: null,
-			updatedAt: editDate,
+			updatedAt: editDateIso,
 		};
 	} catch (error) {
 		console.error(`Error processing ${url}:`, error);

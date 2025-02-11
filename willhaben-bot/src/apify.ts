@@ -47,12 +47,13 @@ export async function handleApifyWebhook(request: Request, env: Env): Promise<Re
 				// 	translatedDescription = null;
 				// }
 				const firstSeenAt = listing.updatedAt || listing.publishedAt || listing.snapshotDate || new Date().toISOString();
+				const firstSeenAtIso = new Date(firstSeenAt).toISOString();
 
 				// Store in database
 				await env.DB.prepare(
 					'INSERT INTO listings (listingId, data, translatedDescription, liked, isNew, firstSeenAt) VALUES (?, ?, ?, ?, ?, ?)'
 				)
-					.bind(listing.listingId, JSON.stringify(listing), translatedDescription, null, true, firstSeenAt)
+					.bind(listing.listingId, JSON.stringify(listing), translatedDescription, null, true, firstSeenAtIso)
 					.run();
 
 				// Send message
@@ -60,16 +61,17 @@ export async function handleApifyWebhook(request: Request, env: Env): Promise<Re
 					...listing,
 					liked: null,
 					translatedDescription: translatedDescription || undefined,
-					firstSeenAt: firstSeenAt,
+					firstSeenAt: firstSeenAtIso,
 					messageIds: null,
 					isNew: true,
 				};
 				showListings.push(storedListing);
 			} else {
 				const firstSeenAt = listing.updatedAt || listing.publishedAt || listing.snapshotDate || new Date().toISOString();
+				const firstSeenAtIso = new Date(firstSeenAt).toISOString();
 				// Update firstSeenAt if listing exists
 				await env.DB.prepare('UPDATE listings SET data = ?, isNew = ?, firstSeenAt = ? WHERE listingId = ?')
-					.bind(JSON.stringify(listing), false, firstSeenAt, listing.listingId)
+					.bind(JSON.stringify(listing), false, firstSeenAtIso, listing.listingId)
 					.run();
 			}
 		} catch (error) {
