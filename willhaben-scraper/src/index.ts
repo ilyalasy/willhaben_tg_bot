@@ -11,13 +11,13 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
-import { crawlWillhaben } from './scraper';
+import { crawlAll } from './scraper';
 import { Env } from './types';
 
 export default {
 	async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
 		console.log('Scheduled event received:', event);
-		await crawlWillhaben(env);
+		await crawlAll(env);
 	},
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
 		if (request.method !== 'POST') {
@@ -31,7 +31,14 @@ export default {
 		}
 		console.log('Request received:', request.url, JSON.stringify(request));
 		// Start crawling in the background
-		ctx.waitUntil(crawlWillhaben(env));
+
+		// const listings = await crawlAll(env);
+		// return new Response(JSON.stringify(listings), {
+		// 	headers: {
+		// 		'Content-Type': 'application/json',
+		// 	},
+		// });
+		ctx.waitUntil(crawlAll(env));
 		return new Response(JSON.stringify({ message: 'Crawling started' }), {
 			headers: {
 				'Content-Type': 'application/json',
