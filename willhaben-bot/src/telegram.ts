@@ -7,6 +7,8 @@ export const TELEGRAM_COMMANDS = {
 	disliked: { command: '/disliked', description: 'Show disliked listings' },
 	latest: { command: '/latest', description: 'Show listings from the last 2 days' },
 	all: { command: '/all', description: 'Show all listings (liked and neutral)' },
+	scrape: { command: '/scrape', description: 'Start scraping' },
+	start: { command: '/start', description: 'Start the bot' },
 };
 
 export const getCommandsKeyboard = () => ({

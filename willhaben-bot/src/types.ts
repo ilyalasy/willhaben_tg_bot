@@ -112,4 +112,5 @@ export interface Env {
 	APIFY_WEBHOOK_SECRET: string;
 	TG_WEBHOOK_SECRET: string; // Add this to your environment variables
 	DB: D1Database;
+	SCRAPER: Fetcher;
 }

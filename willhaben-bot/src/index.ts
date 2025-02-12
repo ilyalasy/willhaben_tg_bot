@@ -74,8 +74,8 @@ async function handleCallback(callback: TelegramCallback, env: Env): Promise<Res
 }
 
 async function handleCommand(message: TelegramMessage, env: Env): Promise<Response> {
-	if (message.text === '/help' || message.text === '/start') {
-		if (message.text === '/start') {
+	if (message.text === TELEGRAM_COMMANDS.help.command || message.text === TELEGRAM_COMMANDS.start.command) {
+		if (message.text === TELEGRAM_COMMANDS.start.command) {
 			await cleanChatHistory(env.TELEGRAM_BOT_TOKEN, env.TELEGRAM_CHAT_ID, env);
 		}
 		const helpText = Object.values(TELEGRAM_COMMANDS)
@@ -86,14 +86,19 @@ async function handleCommand(message: TelegramMessage, env: Env): Promise<Respon
 	}
 
 	const RATE_LIMIT_DELAY = 1001;
-	if (message.text === '/all' || message.text === '/liked' || message.text === '/disliked' || message.text === '/latest') {
+	if (
+		message.text === TELEGRAM_COMMANDS.all.command ||
+		message.text === TELEGRAM_COMMANDS.liked.command ||
+		message.text === TELEGRAM_COMMANDS.disliked.command ||
+		message.text === TELEGRAM_COMMANDS.latest.command
+	) {
 		await cleanChatHistory(env.TELEGRAM_BOT_TOKEN, env.TELEGRAM_CHAT_ID, env);
 		let condition = 'liked = 1 OR liked IS NULL';
-		if (message.text === '/liked') {
+		if (message.text === TELEGRAM_COMMANDS.liked.command) {
 			condition = 'liked = 1';
-		} else if (message.text === '/disliked') {
+		} else if (message.text === TELEGRAM_COMMANDS.disliked.command) {
 			condition = 'liked = 0';
-		} else if (message.text === '/latest') {
+		} else if (message.text === TELEGRAM_COMMANDS.latest.command) {
 			condition = `${condition} AND firstSeenAt >= datetime('now', '-3 days')`;
 		}
 
@@ -115,6 +120,23 @@ async function handleCommand(message: TelegramMessage, env: Env): Promise<Respon
 				await sleep(RATE_LIMIT_DELAY);
 			}
 		}
+		return new Response('OK');
+	}
+
+	if (message.text === TELEGRAM_COMMANDS.scrape.command) {
+		const response = await env.SCRAPER.fetch('https://willhaben-scraper.ilyalas.workers.dev/', {
+			method: 'POST',
+			body: JSON.stringify({}),
+			headers: {
+				'x-apify-webhook-secret': env.APIFY_WEBHOOK_SECRET,
+			},
+		});
+		console.log('Scraper response:', await response.json());
+		await sendTelegramMessage(
+			'Started scraping. Bot will start sending new listings soon (if there are any).',
+			env.TELEGRAM_BOT_TOKEN,
+			env.TELEGRAM_CHAT_ID
+		);
 		return new Response('OK');
 	}
 
