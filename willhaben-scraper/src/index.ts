@@ -19,7 +19,7 @@ export default {
 		console.log('Scheduled event received:', event);
 		await crawlWillhaben(env);
 	},
-	async fetch(request: Request, env: Env): Promise<Response> {
+	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
 		if (request.method !== 'POST') {
 			return new Response('Method not allowed', { status: 405 });
 		}
@@ -30,8 +30,9 @@ export default {
 			return new Response('Unauthorized', { status: 401 });
 		}
 		console.log('Request received:', request.url, JSON.stringify(request));
-		const listings = await crawlWillhaben(env);
-		return new Response(JSON.stringify(listings), {
+		// Start crawling in the background
+		ctx.waitUntil(crawlWillhaben(env));
+		return new Response(JSON.stringify({ message: 'Crawling started' }), {
 			headers: {
 				'Content-Type': 'application/json',
 			},
