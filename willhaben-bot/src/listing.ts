@@ -40,7 +40,7 @@ async function formatListing(listing: StoredListing): Promise<string> {
 	const mapsUrl = `https://www.google.com/maps?q=${listing.coordinates.latitude},${listing.coordinates.longitude}`;
 
 	// Format last updated date
-	const listingDate = listing.updatedAt || listing.publishedAt || listing.snapshotDate || listing.firstSeenAt;
+	const listingDate = listing.firstSeenAt || listing.updatedAt || listing.publishedAt || listing.snapshotDate;
 	const lastUpdated = listingDate ? new Date(listingDate).toLocaleDateString('en-GB') : 'N/A';
 
 	const newBadge = listing.isNew ? '🆕<b>NEW!</b>\n' : '';

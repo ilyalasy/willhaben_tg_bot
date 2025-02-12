@@ -94,7 +94,7 @@ async function handleCommand(message: TelegramMessage, env: Env): Promise<Respon
 		} else if (message.text === '/disliked') {
 			condition = 'liked = 0';
 		} else if (message.text === '/latest') {
-			condition = "firstSeenAt >= datetime('now', '-2 days')";
+			condition = `${condition} AND firstSeenAt >= datetime('now', '-3 days')`;
 		}
 
 		const { results } = await env.DB.prepare(
